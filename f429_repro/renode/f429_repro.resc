@@ -1,0 +1,25 @@
+:name: STM32F429 JSON HardFault repro
+:description: F429 + FreeRTOS, USART1 출력, GDB 3333 포트
+
+using sysbus
+$name?="f429"
+$bin?=@$ORIGIN/../build/mode4/f429_repro.elf
+mach create $name
+machine LoadPlatformDescription @platforms/cpus/stm32f429.repl
+
+# USART1 출력 창 (창이 안 뜨는 환경이면 renode --console 로 실행)
+showAnalyzer sysbus.usart1
+
+# 폴트 추적을 돕는 로그
+logLevel 1
+# 필요할 때만 켜기 (함수 진입마다 로그가 쏟아짐):
+# cpu LogFunctionNames true
+
+macro reset
+"""
+    sysbus LoadELF $bin
+"""
+runMacro $reset
+
+# GDB: gdb-multiarch f429_repro.elf -ex "target remote :3333"
+machine StartGdbServer 3333
